@@ -14,6 +14,8 @@ class ViewController: UIViewController {
     
     var userIsInTheMiddleOfTypingANumber = false
 
+    var brain = CalculatorBrain()
+    
     @IBAction func appendDigit(sender: UIButton) {
         let digit = sender.currentTitle!
         if(userIsInTheMiddleOfTypingANumber) {
@@ -33,32 +35,33 @@ class ViewController: UIViewController {
     }
     
     @IBAction func operate(sender: UIButton) {
-        let operation = sender.currentTitle!
-        if userIsInTheMiddleOfTypingANumber {
-            enter()
-        }
-        print(operation)
-        switch operation {
-        case "✕": performOperation {$0 * $1}
-        case "÷": performOperation {$1 / $0}
-        case "+": performOperation {$0 + $1}
-        case "−": performOperation {$1 - $0}
-        case "√": performOperation { sqrt($0) }
-        case "sin": performOperation { sin($0) }
-        case "cos": performOperation { cos($0) }
-        case "C":
-            operandStack.removeAll()
-            displayValue = 0
-        default: break
+        if let operation = sender.currentTitle {
+            if userIsInTheMiddleOfTypingANumber {
+                if operation == "±"
+                {
+                    if display.text!.rangeOfString("-") != nil{
+                        display.text = String(display.text!.characters.dropFirst())
+                    }
+                    else{
+                        display.text! = "-" + display.text!
+                    }
+                    return
+                }
+                enter()
+            }
+            
+            if operation == "C"
+            {
+                displayValue = 0
+                enter()
+            } else if let result = brain.performOperation(operation) {
+                displayValue = result
+            } else {
+                displayValue = nil
+            }
         }
     }
-    @IBAction func piButton(sender: UIButton) {
-        if userIsInTheMiddleOfTypingANumber {
-            enter()
-        }
-        displayValue = M_PI
-        enter()
-    }
+
     
     @IBAction func deleteButton(sender: UIButton) {
         if (display.text!.characters.count > 1) {
@@ -79,7 +82,7 @@ class ViewController: UIViewController {
     
     private func performOperation(operation: Double -> Double) {
         if (operandStack.count >= 1) {
-            displayValue = operation(operandStack.removeLast())
+            displayValue! = operation(operandStack.removeLast())
             enter()
         }
     }
@@ -88,18 +91,23 @@ class ViewController: UIViewController {
     
     @IBAction func enter() {
         userIsInTheMiddleOfTypingANumber = false
-        operandStack.append(displayValue)
-        print("op stack = \(operandStack)")
+        if let result = brain.pushOperand(displayValue!) {
+            displayValue = result
+        } else {
+            displayValue = 0
+        }
     }
     
-    var displayValue: Double {
+    var displayValue: Double? {
         get{
             return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
         }
         set{
-            display.text = (newValue == 0) ? "0" : "\(newValue)"
-            
-            userIsInTheMiddleOfTypingANumber = false
+            if newValue == nil {
+                display.text = " "
+            } else{
+                display.text = (newValue == 0) ? "0" : "\(newValue!)"
+            }
         }
     }
     
