@@ -64,12 +64,15 @@ class ViewController: UIViewController {
 
     
     @IBAction func deleteButton(sender: UIButton) {
-        if (display.text!.characters.count > 1) {
-            display.text = String(display.text!.characters.dropLast())
+        if (display.text!.characters.count < 2) {
+        displayValue = 0
+        userIsInTheMiddleOfTypingANumber = false
+        } else if (display.text!.characters.count == 2 && display.text?.rangeOfString("-") != nil ) {
+            display.text = "-0"
         } else {
-            displayValue = 0
-            userIsInTheMiddleOfTypingANumber = false
+            display.text = String(display.text!.characters.dropLast())
         }
+        
     }
     
     
